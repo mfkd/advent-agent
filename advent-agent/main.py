@@ -16,7 +16,6 @@ def request_day(day: int, cookie: str) -> bytes:
 
     # Check the response
     if response.status_code == 200:
-        print("Page fetched successfully!")
         return response.content  # The HTML content of the page
     else:
         raise(Exception(f"Failed to fetch page: {response.status_code}"))
