@@ -43,18 +43,19 @@ Provide a solution to the following coding challenge in Python. Return only the 
 import openai
 import json
 
+
 def chat_request(api_key: str, prompt: str) -> str:
     """
     Sends a request to OpenAI's API to generate an executable Python code snippet
     for a given coding problem statement.
-    
+
     Args:
         api_key (str): Your OpenAI API key.
         prompt (str): The coding problem statement.
-    
+
     Returns:
         str: The generated Python code snippet.
-    
+
     Raises:
         ValueError: If the API response does not include the expected code snippet.
         Exception: For any other unexpected API errors.
@@ -84,7 +85,9 @@ def chat_request(api_key: str, prompt: str) -> str:
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             functions=[function],
-            function_call={"name": "generate_code_snippet"},  # Force the model to call the function
+            function_call={
+                "name": "generate_code_snippet"
+            },  # Force the model to call the function
         )
 
         # Extract the function call arguments
@@ -93,7 +96,9 @@ def chat_request(api_key: str, prompt: str) -> str:
 
         # Ensure the response contains the 'code' key
         if "code" not in arguments:
-            raise ValueError("The API response did not include the expected 'code' key.")
+            raise ValueError(
+                "The API response did not include the expected 'code' key."
+            )
 
         # Return the generated Python code snippet
         return arguments["code"]
