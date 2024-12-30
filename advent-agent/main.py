@@ -111,6 +111,20 @@ def chat_request(api_key: str, prompt: str) -> str:
         raise Exception(f"An unexpected error occurred: {e}")
 
 
+def execute_code(code: str) -> None:
+    """
+    Executes the given Python code snippet and prints the output.
+
+    Args:
+        code (str): The Python code snippet to execute.
+    """
+    try:
+        # Execute the Python code snippet
+        exec(code)
+    except Exception as e:
+        print(f"An error occurred while executing the code: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="advent-agent")
     parser.add_argument("-c", "--cookie", required=False, help="Cookie for the session")
