@@ -82,7 +82,7 @@ def chat_request(api_key: str, prompt: str) -> str:
     try:
         # Send the request to the OpenAI API
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             functions=[function],
             function_call={
