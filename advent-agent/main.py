@@ -1,4 +1,6 @@
 import requests
+import sys
+import io
 import argparse
 from lxml import html
 import openai
@@ -111,29 +113,56 @@ def chat_request(api_key: str, prompt: str) -> str:
         raise Exception(f"An unexpected error occurred: {e}")
 
 
-def execute_code(code: str) -> None:
+def execute_code(code: str) -> str:
     """
-    Executes the given Python code snippet and prints the output.
+    Executes the given Python code snippet and capture the output.
 
     Args:
         code (str): The Python code snippet to execute.
     """
+
+    # Create a string buffer to capture output
+    output_buffer = io.StringIO()
+
+    # Redirect stdout to the buffer
+    sys.stdout = output_buffer
+
+
     try:
         # Execute the Python code snippet
         exec(code)
     except Exception as e:
-        print(f"An error occurred while executing the code: {e}")
+        # Capture and print the error
+        sys.stdout = sys.__stdout__  # Ensure the error message is shown on the actual stdout
+        print("An error occurred during execution:")
+        print(e)
+    finally:
+        # Reset stdout to its default value
+        sys.stdout = sys.__stdout__
+
+    captured_output = output_buffer.getvalue()
+    if isinstance(captured_output, int):
+        raise(Exception(f"Output: {captured_output}"))
+    
+    return captured_output
+
 
 
 def main():
     parser = argparse.ArgumentParser(description="advent-agent")
     parser.add_argument("-c", "--cookie", required=False, help="Cookie for the session")
     parser.add_argument("-a", "--api-key", required=True, help="OpenAI API key")
+    parser.add_argument("-d", "--day", required=True, help="Day to solve")
     args = parser.parse_args()
 
     try:
-        all_arcticles = parse_day(request_day(1, args.cookie))
+        all_arcticles = parse_day(request_day(args.day, args.cookie))
+        print(all_arcticles)
         prompt = create_prompt(all_arcticles)
+        code = chat_request(args.api_key, prompt)
+        print(f"code:\n{code}\n")
+        answer = execute_code(code)
+        print(f"answer:\n{answer}\n")
     except Exception as e:
         print(e)
     except ValueError as ve:
