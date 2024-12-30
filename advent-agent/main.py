@@ -9,9 +9,7 @@ def request_day(day: int, cookie: str) -> bytes:
     url = f"https://adventofcode.com/2024/day/{day}"
 
     # Your session cookie (found after logging into the site via browser)
-    cookies = {
-        "session": cookie
-    }
+    cookies = {"session": cookie}
 
     # Send a GET requestes
     response = requests.get(url, cookies=cookies)
@@ -20,17 +18,19 @@ def request_day(day: int, cookie: str) -> bytes:
     if response.status_code == 200:
         return response.content  # The HTML content of the page
     else:
-        raise(Exception(f"Failed to fetch page: {response.status_code}"))
-    
+        raise (Exception(f"Failed to fetch page: {response.status_code}"))
+
+
 def parse_day(content: bytes) -> str:
     # Parse the content of the page
-    tree = html.fromstring(content) # type: ignore
+    tree = html.fromstring(content)  # type: ignore
     articles = tree.xpath('//article[@class="day-desc"]')
 
     if not articles:
-        raise(Exception("No articles found on the page"))
-    
+        raise (Exception("No articles found on the page"))
+
     return "".join([article.text_content().strip() for article in articles])
+
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
@@ -38,6 +38,7 @@ Provide a solution to the following coding challenge in Python. Return only the 
     """
 
     return f"{pre_prompt}\n{content}"
+
 
 def chat_request(api_key: str, prompt: str) -> str:
     openai.api_key = api_key
@@ -62,7 +63,9 @@ def chat_request(api_key: str, prompt: str) -> str:
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
         functions=[function],
-        function_call={"name": "generate_code_snippet"}, # Force the model to call the function
+        function_call={
+            "name": "generate_code_snippet"
+        },  # Force the model to call the function
     )
 
     # Extract the function call arguments
@@ -70,6 +73,7 @@ def chat_request(api_key: str, prompt: str) -> str:
     arguments = json.loads(function_call["arguments"])
     code_snippet = arguments["code"]
     return code_snippet
+
 
 def main():
     parser = argparse.ArgumentParser(description="advent-agent")
@@ -82,6 +86,7 @@ def main():
         prompt = create_prompt(all_arcticles)
     except Exception as e:
         print(e)
+
 
 if __name__ == "__main__":
     main()
