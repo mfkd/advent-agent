@@ -127,13 +127,14 @@ def execute_code(code: str) -> str:
     # Redirect stdout to the buffer
     sys.stdout = output_buffer
 
-
     try:
         # Execute the Python code snippet
         exec(code)
     except Exception as e:
         # Capture and print the error
-        sys.stdout = sys.__stdout__  # Ensure the error message is shown on the actual stdout
+        sys.stdout = (
+            sys.__stdout__
+        )  # Ensure the error message is shown on the actual stdout
         print("An error occurred during execution:")
         print(e)
     finally:
@@ -142,10 +143,18 @@ def execute_code(code: str) -> str:
 
     captured_output = output_buffer.getvalue()
     if isinstance(captured_output, int):
-        raise(Exception(f"Output: {captured_output}"))
-    
+        raise (Exception(f"Output: {captured_output}"))
+
     return captured_output
 
+
+def split_parts(content: str) -> tuple[str, str]:
+    parts = content.split("--- Part Two ---")
+    if len(parts) > 2:
+        raise (Exception("More than two parts found"))
+    if len(parts) == 1:
+        return content
+    return parts[0], parts[1]
 
 
 def main():
@@ -153,12 +162,23 @@ def main():
     parser.add_argument("-c", "--cookie", required=False, help="Cookie for the session")
     parser.add_argument("-a", "--api-key", required=True, help="OpenAI API key")
     parser.add_argument("-d", "--day", required=True, help="Day to solve")
+    parser.add_argument("-p", "--part", required=True, help="Part to solve")
+
     args = parser.parse_args()
 
     try:
         all_arcticles = parse_day(request_day(args.day, args.cookie))
         print(all_arcticles)
-        prompt = create_prompt(all_arcticles)
+
+        part_to_solve = ""
+        if args.part == "1":
+            part_to_solve = split_parts(all_arcticles)[0]
+        if args.part == "2":
+            part_to_solve = split_parts(all_arcticles)[1]
+        else:
+            raise (Exception("Invalid part"))
+
+        prompt = create_prompt(part_to_solve)
         code = chat_request(args.api_key, prompt)
         print(f"code:\n{code}\n")
         answer = execute_code(code)
