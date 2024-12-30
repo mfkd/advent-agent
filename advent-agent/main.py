@@ -30,6 +30,13 @@ def parse_day(content: bytes) -> str:
     
     return "".join([article.text_content().strip() for article in articles])
 
+def create_prompt(content: str) -> str:
+    pre_prompt = """
+Provide a solution to the following coding challenge in Python. Return only the code snippet. Do not include explanations, comments, or additional context—only the code block:
+    """
+
+    return f"{pre_prompt}\n{content}"
+
 def main():
     parser = argparse.ArgumentParser(description="advent-agent")
     parser.add_argument("-c", "--cookie", required=False, help="Cookie for the session")
@@ -37,7 +44,7 @@ def main():
 
     try:
         all_arcticles = parse_day(request_day(1, args.cookie))
-        print(all_arcticles)
+        print(create_prompt(all_arcticles))
     except Exception as e:
         print(e)
 
