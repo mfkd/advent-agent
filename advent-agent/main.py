@@ -34,7 +34,7 @@ def parse_day(content: bytes) -> str:
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
-Provide a solution to the following coding challenge in Python. Return only the code snippet. Do not include explanations, comments, or additional context—only the code block:
+Solve the following coding challenge in Python. Ensure the solution only includes a single code block that directly returns an int value as the result. The code should have no comments, explanations, or additional context—strictly the code snippet.
     """
 
     return f"{pre_prompt}\n{content}"
