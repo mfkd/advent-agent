@@ -40,8 +40,28 @@ Provide a solution to the following coding challenge in Python. Return only the 
     return f"{pre_prompt}\n{content}"
 
 
+import openai
+import json
+
 def chat_request(api_key: str, prompt: str) -> str:
+    """
+    Sends a request to OpenAI's API to generate an executable Python code snippet
+    for a given coding problem statement.
+    
+    Args:
+        api_key (str): Your OpenAI API key.
+        prompt (str): The coding problem statement.
+    
+    Returns:
+        str: The generated Python code snippet.
+    
+    Raises:
+        ValueError: If the API response does not include the expected code snippet.
+        Exception: For any other unexpected API errors.
+    """
+    # Set API key
     openai.api_key = api_key
+
     # Define the function schema
     function = {
         "name": "generate_code_snippet",
@@ -58,21 +78,32 @@ def chat_request(api_key: str, prompt: str) -> str:
         },
     }
 
-    # Send the request to the OpenAI API
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        functions=[function],
-        function_call={
-            "name": "generate_code_snippet"
-        },  # Force the model to call the function
-    )
+    try:
+        # Send the request to the OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            functions=[function],
+            function_call={"name": "generate_code_snippet"},  # Force the model to call the function
+        )
 
-    # Extract the function call arguments
-    function_call = response["choices"][0]["message"]["function_call"]
-    arguments = json.loads(function_call["arguments"])
-    code_snippet = arguments["code"]
-    return code_snippet
+        # Extract the function call arguments
+        function_call = response["choices"][0]["message"]["function_call"]
+        arguments = json.loads(function_call["arguments"])
+
+        # Ensure the response contains the 'code' key
+        if "code" not in arguments:
+            raise ValueError("The API response did not include the expected 'code' key.")
+
+        # Return the generated Python code snippet
+        return arguments["code"]
+
+    except openai.error.OpenAIError as e:
+        raise Exception(f"OpenAI API error: {e}")
+    except ValueError as ve:
+        raise ve
+    except Exception as e:
+        raise Exception(f"An unexpected error occurred: {e}")
 
 
 def main():
@@ -86,6 +117,8 @@ def main():
         prompt = create_prompt(all_arcticles)
     except Exception as e:
         print(e)
+    except ValueError as ve:
+        print(ve)
 
 
 if __name__ == "__main__":
