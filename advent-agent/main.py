@@ -3,7 +3,7 @@ import sys
 import io
 import argparse
 from lxml import html
-import openai
+from openai import OpenAI
 import json
 
 
@@ -42,10 +42,6 @@ Write a Python solution to the given challenge. The code must be self-contained 
     return f"{pre_prompt}\n{content}"
 
 
-import openai
-import json
-
-
 def chat_request(api_key: str, prompt: str) -> str:
     """
     Sends a request to OpenAI's API to generate an executable Python code snippet
@@ -62,55 +58,56 @@ def chat_request(api_key: str, prompt: str) -> str:
         ValueError: If the API response does not include the expected code snippet.
         Exception: For any other unexpected API errors.
     """
-    # Set API key
-    openai.api_key = api_key
 
-    # Define the function schema
-    function = {
-        "name": "generate_code_snippet",
-        "description": "Generates an executable Python code snippet for the given problem statement.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "description": "The Python code snippet that solves the given problem.",
-                }
+    # Initialize the OpenAI client
+    client = OpenAI(api_key=api_key)
+
+    # Define the tools to be used in the request
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "solve_coding_challenge",
+                "description": "Solves a specified coding challenge and returns an integer result.",
+                "strict": True,
+                "parameters": {
+                    "type": "object",
+                    "required": ["code_block"],
+                    "properties": {
+                        "code_block": {
+                            "type": "string",
+                            "description": "The Python code snippet that returns an integer value.",
+                        }
+                    },
+                    "additionalProperties": False,
+                },
             },
-            "required": ["code"],
-        },
-    }
+        }
+    ]
 
     try:
         # Send the request to the OpenAI API
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
-            functions=[function],
-            function_call={
-                "name": "generate_code_snippet"
-            },  # Force the model to call the function
+            tools=tools,
+            tool_choice="required"
         )
 
-        # Extract the function call arguments
-        function_call = response["choices"][0]["message"]["function_call"]
-        arguments = json.loads(function_call["arguments"])
+        tool_call = response.choices[0].message.tool_calls[0]
+        arguments = json.loads(tool_call.function.arguments)
+        return arguments.get("code_block")
 
-        # Ensure the response contains the 'code' key
-        if "code" not in arguments:
-            raise ValueError(
-                "The API response did not include the expected 'code' key."
-            )
-
-        # Return the generated Python code snippet
-        return arguments["code"]
-
-    except openai.error.OpenAIError as e:
-        raise Exception(f"OpenAI API error: {e}")
+    except AttributeError as e:
+        raise Exception(
+            f"An unexpected attribute error occurred: {e}. Check your OpenAI library version."
+        ) from e
     except ValueError as ve:
         raise ve
+    except KeyError as ke:
+        raise ValueError("Unexpected API response structure.") from ke
     except Exception as e:
-        raise Exception(f"An unexpected error occurred: {e}")
+        raise Exception(f"An unexpected error occurred: {e}") from e
 
 
 def execute_code(code: str) -> str:
@@ -168,7 +165,6 @@ def main():
 
     try:
         all_arcticles = parse_day(request_day(args.day, args.cookie))
-        print(all_arcticles)
 
         part_to_solve = ""
         if args.part == "1":
@@ -179,10 +175,8 @@ def main():
             raise (Exception("Invalid part"))
 
         prompt = create_prompt(part_to_solve)
-        code = chat_request(args.api_key, prompt)
-        print(f"code:\n{code}\n")
-        answer = execute_code(code)
-        print(f"answer:\n{answer}\n")
+        code_block = chat_request(args.api_key, prompt)
+        print(f"code block:\n{code_block}\n")
     except Exception as e:
         print(e)
     except ValueError as ve:
