@@ -36,7 +36,7 @@ def parse_day(content: bytes) -> str:
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
-Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python's `exec()` function. It should assign the integer result to a variable named `result`. Include no comments, explanations, or additional text—just the executable code snippet.
+Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python’s exec() function. It will have access to an input_data variable, which will be provided as input to the code. The solution should use input_data to compute the result and assign the integer result to a variable named result. Include no comments, explanations, or additional text—just the executable code snippet.
     """
 
     return f"{pre_prompt}\n{content}"
@@ -110,39 +110,30 @@ def chat_request(api_key: str, prompt: str) -> str:
         raise Exception(f"An unexpected error occurred: {e}") from e
 
 
-def execute_code(code: str) -> str:
+def execute_code(code: str, input_data: str) -> str:
     """
-    Executes the given Python code snippet and capture the output.
+    Executes the given Python code snippet and captures the result if defined.
 
     Args:
         code (str): The Python code snippet to execute.
+
+    Returns:
+        str: The 'result' variable if defined, or an error message if an exception occurs.
     """
-
-    # Create a string buffer to capture output
-    output_buffer = io.StringIO()
-
-    # Redirect stdout to the buffer
-    sys.stdout = output_buffer
-
     try:
-        # Execute the Python code snippet
-        exec(code)
+        # Create an isolated execution environment
+        exec_globals = {"input_data": input_data}
+
+        # Execute the provided code snippet
+        exec(code, exec_globals)
+
+        # Return 'result' if defined
+        if "result" in exec_globals:
+            return str(exec_globals["result"])
+        return "No result variable defined."
     except Exception as e:
-        # Capture and print the error
-        sys.stdout = (
-            sys.__stdout__
-        )  # Ensure the error message is shown on the actual stdout
-        print("An error occurred during execution:")
-        print(e)
-    finally:
-        # Reset stdout to its default value
-        sys.stdout = sys.__stdout__
-
-    captured_output = output_buffer.getvalue()
-    if isinstance(captured_output, int):
-        raise (Exception(f"Output: {captured_output}"))
-
-    return captured_output
+        # Return the error message if execution fails
+        return f"An error occurred: {str(e)}"
 
 
 def split_parts(content: str) -> tuple[str, str]:
@@ -176,7 +167,8 @@ def main():
 
         prompt = create_prompt(part_to_solve)
         code_block = chat_request(args.api_key, prompt)
-        print(f"code block:\n{code_block}\n")
+        result = execute_code(code_block)
+        print(f"result:\n{result}\n")
     except Exception as e:
         print(e)
     except ValueError as ve:
