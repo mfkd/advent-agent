@@ -91,7 +91,7 @@ def chat_request(api_key: str, prompt: str) -> str:
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             tools=tools,
-            tool_choice="required"
+            tool_choice="required",
         )
 
         tool_call = response.choices[0].message.tool_calls[0]
