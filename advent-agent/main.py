@@ -110,6 +110,26 @@ def chat_request(api_key: str, prompt: str) -> str:
         raise Exception(f"An unexpected error occurred: {e}") from e
 
 
+def read_file_to_string(file_path: str) -> str:
+    """
+    Reads the content of a file and returns it as a string.
+
+    Parameters:
+        file_path (str): The path to the file to be read.
+
+    Returns:
+        str: The content of the file as a string.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        return "Error: File not found."
+    except IOError:
+        return "Error: An I/O error occurred."
+
+
 def execute_code(code: str, input_data: str) -> str:
     """
     Executes the given Python code snippet and captures the result if defined.
@@ -166,8 +186,9 @@ def main():
             raise (Exception("Invalid part"))
 
         prompt = create_prompt(part_to_solve)
+        input_data = read_file_to_string(f"input_data/day0{args.day}.txt")
         code_block = chat_request(args.api_key, prompt)
-        result = execute_code(code_block)
+        result = execute_code(code_block, input_data)
         print(f"result:\n{result}\n")
     except Exception as e:
         print(e)
