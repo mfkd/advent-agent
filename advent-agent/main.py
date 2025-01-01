@@ -36,7 +36,7 @@ def parse_day(content: bytes) -> str:
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
-Solve the following coding challenge in Python. Ensure the solution only includes a single code block that directly returns an int value as the result. The code should have no comments, explanations, or additional context—strictly the code snippet.
+Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python's `exec()` function. It should assign the integer result to a variable named `result`. Include no comments, explanations, or additional text—just the executable code snippet.
     """
 
     return f"{pre_prompt}\n{content}"
