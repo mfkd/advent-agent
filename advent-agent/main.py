@@ -36,7 +36,7 @@ def parse_day(content: bytes) -> str:
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
-Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python’s exec() function. It will have access to an input_data variable, which will be provided as input to the code. The solution should use input_data to compute the result and assign the integer result to a variable named result. Include no comments, explanations, or additional text—just the executable code snippet.
+Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python's exec() function. It will have access to an input_data variable, which will be provided as input to the code. The solution should use input_data to compute the result and assign the integer result to a variable named result. Include no comments, explanations, or additional text—just the executable code snippet.
     """
 
     return f"{pre_prompt}\n{content}"
