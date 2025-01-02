@@ -13,7 +13,7 @@ def request_day(day: int, cookie: str) -> bytes:
     # Your session cookie (found after logging into the site via browser)
     cookies = {"session": cookie}
 
-    # Send a GET requestes
+    # Send a GET request
     response = requests.get(url, cookies=cookies)
 
     # Check the response
@@ -36,7 +36,22 @@ def parse_day(content: bytes) -> str:
 
 def create_prompt(content: str) -> str:
     pre_prompt = """
-Write a Python solution to the given challenge. The code must be self-contained and executable directly with Python's exec() function. It will have access to an input_data variable, which will be provided as input to the code. The solution should use input_data to compute the result and assign the integer result to a variable named result. Include no comments, explanations, or additional text—just the executable code snippet.
+You are a coding assistant. Generate a Python program based on the following requirements:
+
+### Functional Requirements:
+1. The program must be executable directly using Python's `exec()` function.
+2. Use the variable `input_data` (provided externally) as the sole input.
+3. The final integer result of the computation must be assigned to a variable named `result`.
+
+### Output Format:
+1. Return only the Python code as plain text.
+2. The code must be succinct and contain only the logic necessary to solve the problem.
+3. Exclude any comments, explanations, or extraneous text.
+4. Do not include or hardcode example inputs or data.
+
+### Challenge-Specific Notes:
+1. Ignore any example data provided in the challenge.
+2. Strictly adhere to the format and requirements described above.
     """
 
     return f"{pre_prompt}\n{content}"
@@ -185,8 +200,8 @@ def main():
         else:
             raise (Exception("Invalid part"))
 
-        prompt = create_prompt(part_to_solve)
         input_data = read_file_to_string(f"input_data/day0{args.day}.txt")
+        prompt = create_prompt(part_to_solve)
         code_block = chat_request(args.api_key, prompt)
         result = execute_code(code_block, input_data)
         print(f"result:\n{result}\n")
